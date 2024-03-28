@@ -5,8 +5,10 @@ import anthropic
 import os
 
 # Discord Bot token
-TOKEN = os.environ.get["DISCORD_TOKEN"]
-CHANNEL_ID = os.environ.get["CHANNEL_ID"]  # Discord channel ID to send the summary to
+TOKEN = os.environ.get("DISCORD_TOKEN")
+CHANNEL_ID = int(
+    os.environ.get("CHANNEL_ID")
+)  # Discord channel ID to send the summary to
 
 # RSS feed URL to monitor
 RSS_FEED_URL = "http://b.hatena.ne.jp/hotentry/it.rss"
@@ -15,7 +17,7 @@ RSS_FEED_URL = "http://b.hatena.ne.jp/hotentry/it.rss"
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
-client = anthropic.Anthropic(
+anthclient = anthropic.Anthropic(
     # defaults to os.environ.get("ANTHROPIC_API_KEY")
     api_key=os.environ.get("ANTHROPIC_API_KEY"),
 )
@@ -33,7 +35,7 @@ async def rss_task():
         content = entry.content[0].value
 
         # Use Claude API to summarize the content
-    message = client.messages.create(
+    message = anthclient.messages.create(
         model="claude-3-haiku-20240307",
         max_tokens=1000,
         temperature=0,
