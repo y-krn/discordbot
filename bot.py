@@ -5,6 +5,7 @@ import anthropic
 import os
 import requests
 from bs4 import BeautifulSoup
+import time
 
 
 # Discord Bot token
@@ -54,17 +55,20 @@ async def rss_task():
             continue
 
         # Use Claude API to summarize the content
-    message = anthclient.messages.create(
-        model="claude-3-haiku-20240307",
-        max_tokens=4096,
-        temperature=0,
-        system="次のテキストから重要なポイントを5つ抽出し、各々箇条書きで5点まとめてください。",
-        messages=[{"role": "user", "content": [{"type": "text", "text": content}]}],
-    )
+        message = anthclient.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=4096,
+            temperature=0,
+            system="次のテキストから重要なポイントを5つ抽出し、各々箇条書きで5点まとめてください。",
+            messages=[{"role": "user", "content": [{"type": "text", "text": content}]}],
+        )
 
-    # Send the summary to the Discord channel
-    channel = client.get_channel(CHANNEL_ID)
-    await channel.send(f"**{title}**\n{article_url}\n{message.content[0].text}")
+        # Send the summary to the Discord channel
+        channel = client.get_channel(CHANNEL_ID)
+        await channel.send(
+            f"**{title}**\n\n{article_url}\n\n{message.content[0].text}\n\n"
+        )
+        time.sleep(12)
 
 
 # Start the RSS task when the bot is ready
