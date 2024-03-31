@@ -3,6 +3,9 @@ from discord.ext import tasks
 import feedparser
 import anthropic
 import os
+import requests
+from bs4 import BeautifulSoup
+
 
 # Discord Bot token
 TOKEN = os.environ.get("DISCORD_TOKEN")
@@ -30,14 +33,30 @@ async def rss_task():
 
     # Process each feed entry
     for entry in feed.entries:
+        article_url = entry.link
         title = entry.title
-        link = entry.link
-        content = entry.content[0].value
+
+        try:
+            response = requests.get(article_url)
+            html_content = response.text
+        except:
+            print("記事の取得に失敗しました。")
+            continue
+
+        # BeautifulSoupを使って本文のみを抽出
+        soup = BeautifulSoup(html_content, "html.parser")
+        article_body = [c.get_text() for c in soup.find_all("p")]
+        # 本文を含むDivタグの例
+        if article_body:
+            content = " ".join(article_body)
+        else:
+            print("本文の抽出に失敗しました。")
+            continue
 
         # Use Claude API to summarize the content
     message = anthclient.messages.create(
         model="claude-3-haiku-20240307",
-        max_tokens=1000,
+        max_tokens=4096,
         temperature=0,
         system="次のテキストから重要なポイントを5つ抽出し、各々箇条書きで5点まとめてください。",
         messages=[{"role": "user", "content": [{"type": "text", "text": content}]}],
@@ -45,7 +64,7 @@ async def rss_task():
 
     # Send the summary to the Discord channel
     channel = client.get_channel(CHANNEL_ID)
-    await channel.send(f"**{title}**\n{link}\n{message.content}")
+    await channel.send(f"**{title}**\n{article_url}\n{message.content}")
 
 
 # Start the RSS task when the bot is ready
