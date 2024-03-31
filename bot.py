@@ -64,7 +64,7 @@ async def rss_task():
 
     # Send the summary to the Discord channel
     channel = client.get_channel(CHANNEL_ID)
-    await channel.send(f"**{title}**\n{article_url}\n{message.content}")
+    await channel.send(f"**{title}**\n{article_url}\n{message.content[0].text}")
 
 
 # Start the RSS task when the bot is ready
