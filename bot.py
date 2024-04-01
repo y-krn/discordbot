@@ -6,6 +6,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import time
+import asyncio
 
 
 # Discord Bot token
@@ -22,7 +23,6 @@ intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
 anthclient = anthropic.Anthropic(
-    # defaults to os.environ.get("ANTHROPIC_API_KEY")
     api_key=os.environ.get("ANTHROPIC_API_KEY"),
 )
 
@@ -59,16 +59,16 @@ async def rss_task():
             model="claude-3-haiku-20240307",
             max_tokens=4096,
             temperature=0,
-            system="次のテキストから重要なポイントを5つ抽出し、各々箇条書きで5点まとめてください。",
+            system="あなたの仕事は、提供された内容を確認し、重要な情報をまとめた簡潔な要約を5つのポイントに絞って作成することです。明確で専門的な言葉を使用し要約を論理的に整理します。概要は理解しやすく、内容の包括的かつ簡潔な概要を提供するものにしてください。特に、本内容から得られる目新しい事項を明確に示すことに重点を置きます。",
             messages=[{"role": "user", "content": [{"type": "text", "text": content}]}],
         )
 
+        text = message.content[0].text.replace("\n\n", "\n")
+
         # Send the summary to the Discord channel
         channel = client.get_channel(CHANNEL_ID)
-        await channel.send(
-            f"**{title}**\n\n{article_url}\n\n{message.content[0].text}\n\n"
-        )
-        time.sleep(12)
+        await channel.send(f"# {title}\n\n{article_url}\n\n{text}\n\n")
+        await asyncio.sleep(60)
 
 
 # Start the RSS task when the bot is ready
